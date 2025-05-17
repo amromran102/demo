@@ -7,8 +7,8 @@ on:
   push:
     branches: [ main ]
     paths:
-      - 'Project/app/backend/**'
-      - 'Project/app/frontend/**'
+      - 'app/backend/**'
+      - 'app/frontend/**'
       - '.github/workflows/container-build-push.yaml'
   workflow_dispatch:
 
@@ -36,7 +36,7 @@ jobs:
       - name: Build and push frontend image
         uses: docker/build-push-action@v5
         with:
-          context: Project/app/frontend
+          context: app/frontend
           push: true
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:${{ github.sha }}
@@ -45,7 +45,7 @@ jobs:
       - name: Build and push backend image
         uses: docker/build-push-action@v5
         with:
-          context: Project/app/backend
+          context: app/backend
           push: true
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:${{ github.sha }}
