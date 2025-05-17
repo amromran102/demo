@@ -9,26 +9,23 @@ RUN npm run build
 # Stage 2: Runtime
 FROM nginx:alpine
 
-# 1. Create ALL required directories with correct permissions
-RUN mkdir -p /tmp/nginx /var/cache/nginx /var/run/nginx && \
-    chown -R nginx:nginx /etc/nginx/conf.d /tmp/nginx /var/cache/nginx /var/run/nginx /var/log/nginx && \
-    chmod -R 755 /tmp/nginx /var/cache/nginx /var/run/nginx
+# Create required directories and set permissions for rootless Nginx
+RUN mkdir -p /tmp/nginx /var/cache/nginx /var/run/nginx /var/log/nginx \
+    && chown -R nginx:nginx /etc/nginx/conf.d /tmp/nginx /var/cache/nginx /var/run/nginx /var/log/nginx /usr/share/nginx/html \
+    && chmod -R 755 /tmp/nginx /var/cache/nginx /var/run/nginx
 
-# 2. Replace the entire nginx config
+# Copy Nginx config and backend template
 COPY nginx.conf /etc/nginx/nginx.conf
+COPY --chown=nginx:nginx backend.conf.template /tmp/backend.conf.template
 
-# 3. Remove default config
-RUN rm -f /etc/nginx/conf.d/default.conf
-
-# 4. Copy application files
+# Copy application files 
 COPY --from=build --chown=nginx:nginx /app/build /usr/share/nginx/html
-COPY --chown=nginx:nginx server.conf /etc/nginx/server.conf.template
 
-# 5. Copy entrypoint script
+# Copy entrypoint script
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-# 6. Switch to nginx user
+# Switch to nginx user for rootless operation
 USER nginx
 
 # Expose port 8080 (HTTP)
