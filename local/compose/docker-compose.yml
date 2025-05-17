@@ -1,7 +1,7 @@
 services:
   frontend:
     build:
-      context: ./frontend
+      context: ../../app/frontend
       dockerfile: Dockerfile
     ports:
       - "8080:8080"
@@ -12,7 +12,7 @@ services:
         condition: service_healthy
   backend:
     build:
-      context: ./backend
+      context: ../../app/backend
       dockerfile: Dockerfile
     environment:
       - PORT=3000

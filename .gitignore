@@ -11,7 +11,7 @@ build/
 *.log
 
 # Ignore environment variables
-.env
+# .env
 
 # Ignore local development overrides
 local.env

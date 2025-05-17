@@ -3,12 +3,40 @@
 This folder contains resources and instructions for running and testing the microservices app locally using either Docker Compose or Kind (Kubernetes in Docker).
 
 ## Structure
-- `compose/` — Docker Compose files and environment for local multi-container testing.
-- `kind/` — Scripts and documentation for running the stack on a local Kind cluster with Helm.
+- `compose/` — Docker Compose files, `.env` example, and persistent volume for local multi-container testing.
+  - `docker-compose.yml` — Compose file for frontend, backend, and Postgres.
+  - `.env` — Environment variables for Compose (user must create).
+- `kind/` — Scripts, custom values files, and documentation for running the stack on a local Kind cluster with Helm.
+  - `kind-setup.sh` — Automated setup script for Kind + Helm workflow.
+  - `app-values.yaml` — Example override values for the app Helm chart (user must create).
+  - `postgres-values.yaml` — Example override values for the Postgres Helm chart (user must create).
+- `README.md` — This documentation file.
 
 ## Usage
 - Use `compose/` for quick local development and integration testing with Docker Compose.
 - Use `kind/` for testing Kubernetes manifests and Helm charts in a local cluster before deploying to real Kubernetes environments.
+
+## Running with Docker Compose
+
+To run the stack locally using Docker Compose:
+
+1. Copy or create a `.env` file in `local/compose/` with the following content (example):
+
+   ```env
+   POSTGRES_USER=myuser
+   POSTGRES_PASSWORD=securepassword123
+   POSTGRES_DB=ideasdb
+   POSTGRES_CONNECTION_STRING=postgresql://myuser:securepassword123@postgres:5432/ideasdb
+   ```
+
+2. Start the stack:
+
+   ```sh
+   cd local/compose
+   docker compose up --build
+   ```
+
+This will build the images and start all services (frontend, backend, postgres) with the correct environment variables for local development.
 
 ## Running the Kind Setup Script
 
