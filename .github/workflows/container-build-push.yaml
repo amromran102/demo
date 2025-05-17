@@ -9,7 +9,7 @@ on:
     paths:
       - 'Project/app/backend/**'
       - 'Project/app/frontend/**'
-      - '.github/workflows/ci-cd.yaml'
+      - '.github/workflows/container-build-push.yaml'
   workflow_dispatch:
 
 jobs:
