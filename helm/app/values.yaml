@@ -9,4 +9,4 @@ backend:
     PORT: "3000"
 
 secrets:
-  DBconnectionString: "CHANGEME"
+  DBconnectionString: ""

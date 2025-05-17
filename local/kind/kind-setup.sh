@@ -1,5 +1,5 @@
 #!/bin/bash
-# Kind + Helm Microservices Setup Script (Step 1-4)
+# Kind + Helm Microservices Setup Script (Step 1-7)
 # Usage: ./kind-setup.sh
 set -euo pipefail
 
@@ -29,4 +29,24 @@ docker build -t app-backend:latest "$APP_DIR/backend"
 kind load docker-image app-frontend:latest --name "$CLUSTER_NAME"
 kind load docker-image app-backend:latest --name "$CLUSTER_NAME"
 
+# 5. Create namespace for the app
+NAMESPACE="sample-app"
+kubectl get namespace "$NAMESPACE" >/dev/null 2>&1 || kubectl create namespace "$NAMESPACE"
+
+# 6. Deploy PostgreSQL with Helm using custom values
+helm upgrade --install postgres-db ../../helm/postgres-standalone/postgresql \
+  --namespace "$NAMESPACE" \
+  -f ./postgres-values.yaml
+
+# Wait for PostgreSQL to be ready
+echo "Waiting for PostgreSQL pod to be ready..."
+kubectl rollout status statefulset/postgres-db-postgresql -n "$NAMESPACE" --timeout=120s
+
+# 7. Deploy the App with Helm using custom values
+helm upgrade --install microservices-app ../../helm/app \
+  --namespace "$NAMESPACE" \
+  -f ./app-values.yaml
+
+echo
+echo "Deployment complete. Check resources with: kubectl get all -n $NAMESPACE"
 echo "Kind cluster '$CLUSTER_NAME' is ready and images are loaded."
