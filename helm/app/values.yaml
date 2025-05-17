@@ -1,10 +1,10 @@
 frontend:
-  image: app-frontend:latest # Replace with your frontend image name
+  image: "" # Replace with your frontend image name
   env:
     BACKEND_URL: http://backend:3000
 
 backend:
-  image: app-backend:latest # Replace with your backend image name
+  image: "" # Replace with your backend image name
   env:
     PORT: "3000"
 
