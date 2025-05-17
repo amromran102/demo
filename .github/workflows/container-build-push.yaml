@@ -3,6 +3,10 @@
 
 name: Build and Push Container Images
 
+permissions:
+  contents: read
+  packages: write
+
 on:
   push:
     branches: [ main ]
