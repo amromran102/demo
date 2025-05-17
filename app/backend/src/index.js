@@ -6,11 +6,7 @@ const port = process.env.PORT || 3000;
 app.use(express.json());
 
 const pool = new Pool({
-  user: process.env.POSTGRES_USER || 'user',
-  host: process.env.POSTGRES_HOST || 'postgres',
-  database: process.env.POSTGRES_DB || 'app',
-  password: process.env.POSTGRES_PASSWORD || 'password',
-  port: process.env.POSTGRES_PORT || 5432,
+  connectionString: process.env.POSTGRES_CONNECTION_STRING || 'postgresql://postgres@postgres:5432/app',
 });
 
 // Ensure messages table exists
