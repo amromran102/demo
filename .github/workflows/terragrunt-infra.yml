@@ -37,16 +37,15 @@ jobs:
         id: cache-terragrunt
         uses: actions/cache@v4
         with:
-          path: .tools/terragrunt/terragrunt
+          path: .tools/terragrunt
           key: terragrunt-${{ runner.os }}-0.78.4
       - name: Download Terragrunt if not cached
         if: steps.cache-terragrunt.outputs.cache-hit != 'true'
         run: |
-          mkdir -p .tools/terragrunt
-          wget -O .tools/terragrunt/terragrunt https://github.com/gruntwork-io/terragrunt/releases/download/v0.78.4/terragrunt_linux_amd64
-          chmod +x .tools/terragrunt/terragrunt
-      - name: Move Terragrunt to /usr/local/bin
-        run: sudo mv .tools/terragrunt/terragrunt /usr/local/bin/terragrunt
+          wget -O .tools/terragrunt https://github.com/gruntwork-io/terragrunt/releases/download/v0.78.4/terragrunt_linux_amd64
+          chmod +x .tools/terragrunt
+      - name: Copy Terragrunt to /usr/local/bin
+        run: sudo cp .tools/terragrunt /usr/local/bin/terragrunt
       - name: Setup TFLint
         uses: terraform-linters/setup-tflint@v4
         with:
@@ -54,7 +53,7 @@ jobs:
       - name: Check Terragrunt formatting
         run: terragrunt hcl format --check
       - name: Validate all Terragrunt modules
-        run: terragrunt validate-all
+        run: terragrunt validate --all
       - name: Lint Terraform code
         run: tflint --filter terragrunt/terraform-modules
 
@@ -80,16 +79,15 @@ jobs:
         id: cache-terragrunt
         uses: actions/cache@v4
         with:
-          path: .tools/terragrunt/terragrunt
+          path: .tools/terragrunt
           key: terragrunt-${{ runner.os }}-0.78.4
       - name: Download Terragrunt if not cached
         if: steps.cache-terragrunt.outputs.cache-hit != 'true'
         run: |
-          mkdir -p .tools/terragrunt
-          wget -O .tools/terragrunt/terragrunt https://github.com/gruntwork-io/terragrunt/releases/download/v0.78.4/terragrunt_linux_amd64
-          chmod +x .tools/terragrunt/terragrunt
-      - name: Move Terragrunt to /usr/local/bin
-        run: sudo mv .tools/terragrunt/terragrunt /usr/local/bin/terragrunt
+          wget -O .tools/terragrunt https://github.com/gruntwork-io/terragrunt/releases/download/v0.78.4/terragrunt_linux_amd64
+          chmod +x .tools/terragrunt
+      - name: Copy Terragrunt to /usr/local/bin
+        run: sudo cp .tools/terragrunt /usr/local/bin/terragrunt
       - name: Generate Terragrunt dependency graph
         run: terragrunt dag graph --working-dir=terragrunt/live/prod > deps.dot
       - name: Find all affected modules (changed + dependents)
@@ -117,7 +115,7 @@ jobs:
           for dir in $AFFECTED_DIRS; do
             echo "Planning in $dir..."
             cd $dir
-            terragrunt plan --terragrunt-non-interactive || exit 1
+            terragrunt plan --non-interactive || exit 1
             cd -
           done
 
@@ -144,16 +142,15 @@ jobs:
         id: cache-terragrunt
         uses: actions/cache@v4
         with:
-          path: .tools/terragrunt/terragrunt
+          path: .tools/terragrunt
           key: terragrunt-${{ runner.os }}-0.78.4
       - name: Download Terragrunt if not cached
         if: steps.cache-terragrunt.outputs.cache-hit != 'true'
         run: |
-          mkdir -p .tools/terragrunt
-          wget -O .tools/terragrunt/terragrunt https://github.com/gruntwork-io/terragrunt/releases/download/v0.78.4/terragrunt_linux_amd64
-          chmod +x .tools/terragrunt/terragrunt
-      - name: Move Terragrunt to /usr/local/bin
-        run: sudo mv .tools/terragrunt/terragrunt /usr/local/bin/terragrunt
+          wget -O .tools/terragrunt https://github.com/gruntwork-io/terragrunt/releases/download/v0.78.4/terragrunt_linux_amd64
+          chmod +x .tools/terragrunt
+      - name: Copy Terragrunt to /usr/local/bin
+        run: sudo cp .tools/terragrunt /usr/local/bin/terragrunt
       - name: Generate Terragrunt dependency graph
         run: terragrunt dag graph --working-dir=terragrunt/live/prod > deps.dot
       - name: Find all affected modules (changed + dependents)
@@ -181,6 +178,6 @@ jobs:
           for dir in $AFFECTED_DIRS; do
             echo "Applying in $dir..."
             cd $dir
-            terragrunt apply --terragrunt-non-interactive -auto-approve || exit 1
+            terragrunt apply --non-interactive -auto-approve || exit 1
             cd -
           done
