@@ -91,15 +91,15 @@ jobs:
       - name: Move Terragrunt to /usr/local/bin
         run: sudo mv .tools/terragrunt/terragrunt /usr/local/bin/terragrunt
       - name: Generate Terragrunt dependency graph
-        run: terragrunt graph-dependencies --terragrunt-working-dir terragrunt/live/prod > deps.dot
+        run: terragrunt dag graph --working-dir=terragrunt/live/prod > deps.dot
       - name: Find all affected modules (changed + dependents)
         id: affected
         run: |
           CHANGED_DIRS=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep 'terragrunt/live/prod/' | awk -F'/' '{print $1"/"$2"/"$3"/"$4}' | sort -u | xargs)
-          terragrunt graph-dependencies --terragrunt-working-dir terragrunt/live/prod > deps.dot
+          terragrunt dag graph --working-dir=terragrunt/live/prod > deps.dot
           get_dependents() {
             local module="$1"
-            grep "\"$module\"" deps.dot | awk -F'->' '{gsub(/[\"]/, "", $2); print $2}' | tr -d ' '
+            grep "\"$module\"" deps.dot | awk -F'->' '{gsub(/"/, "", $2); print $2}' | tr -d ' '
           }
           ALL_AFFECTED=()
           for dir in $CHANGED_DIRS; do
@@ -155,15 +155,15 @@ jobs:
       - name: Move Terragrunt to /usr/local/bin
         run: sudo mv .tools/terragrunt/terragrunt /usr/local/bin/terragrunt
       - name: Generate Terragrunt dependency graph
-        run: terragrunt graph-dependencies --terragrunt-working-dir terragrunt/live/prod > deps.dot
+        run: terragrunt dag graph --working-dir=terragrunt/live/prod > deps.dot
       - name: Find all affected modules (changed + dependents)
         id: affected
         run: |
           CHANGED_DIRS=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep 'terragrunt/live/prod/' | awk -F'/' '{print $1"/"$2"/"$3"/"$4}' | sort -u | xargs)
-          terragrunt graph-dependencies --terragrunt-working-dir terragrunt/live/prod > deps.dot
+          terragrunt dag graph --working-dir=terragrunt/live/prod > deps.dot
           get_dependents() {
             local module="$1"
-            grep "\"$module\"" deps.dot | awk -F'->' '{gsub(/[\"]/, "", $2); print $2}' | tr -d ' '
+            grep "\"$module\"" deps.dot | awk -F'->' '{gsub(/"/, "", $2); print $2}' | tr -d ' '
           }
           ALL_AFFECTED=()
           for dir in $CHANGED_DIRS; do
