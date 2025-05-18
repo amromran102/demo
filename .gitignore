@@ -28,3 +28,6 @@ coverage/
 
 # Ignore Terragrunt cache
 .terragrunt-cache/
+
+# Ignore local test folder
+tests
