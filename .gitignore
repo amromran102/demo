@@ -13,9 +13,6 @@ build/
 # Ignore environment variables
 # .env
 
-# Ignore local development overrides
-local.env
-
 # Ignore coverage reports
 coverage/
 
@@ -28,3 +25,6 @@ coverage/
 
 # Ignore temporary files
 *.tmp
+
+# Ignore Terragrunt cache
+.terragrunt-cache/
