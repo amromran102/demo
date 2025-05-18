@@ -56,7 +56,7 @@ jobs:
       - name: Validate all Terragrunt modules
         run: terragrunt validate-all
       - name: Lint Terraform code
-        run: tflint --recursive terragrunt/terraform-modules
+        run: tflint --filter terragrunt/terraform-modules
 
   plan:
     name: Terragrunt Plan (Affected Modules)
