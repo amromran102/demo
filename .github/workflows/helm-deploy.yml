@@ -1,0 +1,57 @@
+name: Helm Deploy Pipeline
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'helm/**'
+      - '.github/workflows/helm-deploy.yml'
+
+jobs:
+  helm-deploy:
+    name: Deploy Helm Charts to AKS
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: 'latest'
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Set AKS context
+        uses: azure/aks-set-context@v3
+        with:
+          resource-group: my-prod-aks
+          cluster-name: prod-aks
+
+      - name: Deploy ingress-nginx
+        run: |
+          helm upgrade --install ingress-nginx ./helm/ingress-nginx -n prod --create-namespace -f ./helm/environment/prod/ingress-nginx-values.yaml
+
+      - name: Deploy PostgreSQL
+        run: |
+          helm upgrade --install postgresha ./helm/bitnami-postgres -n prod -f ./helm/environment/prod/postgres-ha-values.yaml \
+            --set auth.password=${{ secrets.PG_USER_PASSWORD }} \
+            --set auth.replicationPassword=${{ secrets.PG_REPL_PASSWORD }}
+
+      - name: Deploy App
+        run: |
+          helm upgrade --install sampleapp ./helm/app -n prod -f ./helm/environment/prod/app-values.yaml \
+            --set secrets.DBconnectionString="postgresql://myuser:${{ secrets.PG_USER_PASSWORD }}@postgresha-postgresql-primary.prod.svc.cluster.local:5432/ideasdb"
+
+      - name: Show all resources
+        run: |
+          kubectl get all -n prod

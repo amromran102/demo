@@ -1,0 +1,40 @@
+architecture: replication
+
+auth:
+  enablePostgresUser: true
+  username: myuser
+  password: ""
+  database: ideasdb
+  replicationUsername: repl_user
+  replicationPassword: ""
+
+primary:
+  replicaCount: 1
+  persistence:
+    enabled: true
+    storageClass: default
+    size: 8Gi
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 1
+      memory: 2Gi
+
+readReplicas:
+  replicaCount: 2
+  persistence:
+    enabled: true
+    storageClass: default
+    size: 8Gi
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 1
+      memory: 2Gi
+
+service:
+  type: ClusterIP

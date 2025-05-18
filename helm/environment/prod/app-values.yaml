@@ -1,0 +1,12 @@
+frontend:
+  image: ghcr.io/amromran102/demo/app-frontend:latest
+  env:
+    BACKEND_URL: http://backend:3000
+
+backend:
+  image: ghcr.io/amromran102/demo/app-backend:latest
+  env:
+    PORT: "3000"
+
+secrets:
+  DBconnectionString: ""
