@@ -47,7 +47,7 @@ jobs:
         with:
           tflint_version: v0.57.0
       - name: Check Terragrunt formatting
-        run: terragrunt hcl format --check --terragrunt-dirs terragrunt/live
+        run: terragrunt hcl format --check
       - name: Validate all Terragrunt modules
         run: terragrunt validate-all --terragrunt-dirs terragrunt/live
       - name: Lint Terraform code
