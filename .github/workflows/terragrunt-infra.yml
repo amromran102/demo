@@ -42,6 +42,7 @@ jobs:
       - name: Download Terragrunt if not cached
         if: steps.cache-terragrunt.outputs.cache-hit != 'true'
         run: |
+          mkdir -p .tools
           wget -O .tools/terragrunt https://github.com/gruntwork-io/terragrunt/releases/download/v0.78.4/terragrunt_linux_amd64
           chmod +x .tools/terragrunt
       - name: Copy Terragrunt to /usr/local/bin
@@ -84,6 +85,7 @@ jobs:
       - name: Download Terragrunt if not cached
         if: steps.cache-terragrunt.outputs.cache-hit != 'true'
         run: |
+          mkdir -p .tools
           wget -O .tools/terragrunt https://github.com/gruntwork-io/terragrunt/releases/download/v0.78.4/terragrunt_linux_amd64
           chmod +x .tools/terragrunt
       - name: Copy Terragrunt to /usr/local/bin
@@ -147,6 +149,7 @@ jobs:
       - name: Download Terragrunt if not cached
         if: steps.cache-terragrunt.outputs.cache-hit != 'true'
         run: |
+          mkdir -p .tools
           wget -O .tools/terragrunt https://github.com/gruntwork-io/terragrunt/releases/download/v0.78.4/terragrunt_linux_amd64
           chmod +x .tools/terragrunt
       - name: Copy Terragrunt to /usr/local/bin
