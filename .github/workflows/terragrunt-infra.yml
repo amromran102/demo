@@ -30,15 +30,16 @@ jobs:
         id: cache-terragrunt
         uses: actions/cache@v4
         with:
-          path: terragrunt
+          path: .tools/terragrunt/terragrunt
           key: terragrunt-${{ runner.os }}-0.78.4
       - name: Download Terragrunt if not cached
         if: steps.cache-terragrunt.outputs.cache-hit != 'true'
         run: |
-          wget -O terragrunt https://github.com/gruntwork-io/terragrunt/releases/download/v0.78.4/terragrunt_linux_amd64
-          chmod +x terragrunt
+          mkdir -p .tools/terragrunt
+          wget -O .tools/terragrunt/terragrunt https://github.com/gruntwork-io/terragrunt/releases/download/v0.78.4/terragrunt_linux_amd64
+          chmod +x .tools/terragrunt/terragrunt
       - name: Move Terragrunt to /usr/local/bin
-        run: sudo mv terragrunt /usr/local/bin/
+        run: sudo mv .tools/terragrunt/terragrunt /usr/local/bin/terragrunt
       - name: Setup TFLint
         uses: terraform-linters/setup-tflint@v4
         with:
@@ -72,15 +73,16 @@ jobs:
         id: cache-terragrunt
         uses: actions/cache@v4
         with:
-          path: terragrunt
+          path: .tools/terragrunt/terragrunt
           key: terragrunt-${{ runner.os }}-0.78.4
       - name: Download Terragrunt if not cached
         if: steps.cache-terragrunt.outputs.cache-hit != 'true'
         run: |
-          wget -O terragrunt https://github.com/gruntwork-io/terragrunt/releases/download/v0.78.4/terragrunt_linux_amd64
-          chmod +x terragrunt
+          mkdir -p .tools/terragrunt
+          wget -O .tools/terragrunt/terragrunt https://github.com/gruntwork-io/terragrunt/releases/download/v0.78.4/terragrunt_linux_amd64
+          chmod +x .tools/terragrunt/terragrunt
       - name: Move Terragrunt to /usr/local/bin
-        run: sudo mv terragrunt /usr/local/bin/
+        run: sudo mv .tools/terragrunt/terragrunt /usr/local/bin/terragrunt
       - name: Generate Terragrunt dependency graph
         run: terragrunt graph-dependencies --terragrunt-working-dir terragrunt/live/prod > deps.dot
       - name: Find all affected modules (changed + dependents)
@@ -135,15 +137,16 @@ jobs:
         id: cache-terragrunt
         uses: actions/cache@v4
         with:
-          path: terragrunt
+          path: .tools/terragrunt/terragrunt
           key: terragrunt-${{ runner.os }}-0.78.4
       - name: Download Terragrunt if not cached
         if: steps.cache-terragrunt.outputs.cache-hit != 'true'
         run: |
-          wget -O terragrunt https://github.com/gruntwork-io/terragrunt/releases/download/v0.78.4/terragrunt_linux_amd64
-          chmod +x terragrunt
+          mkdir -p .tools/terragrunt
+          wget -O .tools/terragrunt/terragrunt https://github.com/gruntwork-io/terragrunt/releases/download/v0.78.4/terragrunt_linux_amd64
+          chmod +x .tools/terragrunt/terragrunt
       - name: Move Terragrunt to /usr/local/bin
-        run: sudo mv terragrunt /usr/local/bin/
+        run: sudo mv .tools/terragrunt/terragrunt /usr/local/bin/terragrunt
       - name: Generate Terragrunt dependency graph
         run: terragrunt graph-dependencies --terragrunt-working-dir terragrunt/live/prod > deps.dot
       - name: Find all affected modules (changed + dependents)
