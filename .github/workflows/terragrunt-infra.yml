@@ -1,0 +1,176 @@
+# Terragrunt CI/CD pipeline for infrastructure
+# This workflow performs linting, validation, planning, and applies for changed modules only.
+# It is designed for modular, safe, and production-ready Terragrunt usage on Azure.
+
+name: Terragrunt Infra CI/CD
+
+on:
+  pull_request:
+    paths:
+      - 'terragrunt/**'
+  push:
+    branches: [main]
+    paths:
+      - 'terragrunt/**'
+
+jobs:
+  lint-validate:
+    name: Lint & Validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout only terragrunt
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: terragrunt
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.12.0
+      - name: Cache Terragrunt
+        id: cache-terragrunt
+        uses: actions/cache@v4
+        with:
+          path: terragrunt
+          key: terragrunt-${{ runner.os }}-0.78.4
+      - name: Download Terragrunt if not cached
+        if: steps.cache-terragrunt.outputs.cache-hit != 'true'
+        run: |
+          wget -O terragrunt https://github.com/gruntwork-io/terragrunt/releases/download/v0.78.4/terragrunt_linux_amd64
+          chmod +x terragrunt
+      - name: Move Terragrunt to /usr/local/bin
+        run: sudo mv terragrunt /usr/local/bin/
+      - name: Setup TFLint
+        uses: terraform-linters/setup-tflint@v4
+        with:
+          tflint_version: v0.57.0
+      - name: Check Terragrunt formatting
+        run: terragrunt hcl format --check --terragrunt-dirs terragrunt/live
+      - name: Validate all Terragrunt modules
+        run: terragrunt validate-all --terragrunt-dirs terragrunt/live
+      - name: Lint Terraform code
+        run: tflint --recursive terragrunt/terraform-modules
+
+  plan:
+    name: Terragrunt Plan (Affected Modules)
+    needs: lint-validate
+    runs-on: ubuntu-latest
+    env:
+      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+    steps:
+      - name: Checkout only terragrunt
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: terragrunt
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.12.0
+      - name: Cache Terragrunt
+        id: cache-terragrunt
+        uses: actions/cache@v4
+        with:
+          path: terragrunt
+          key: terragrunt-${{ runner.os }}-0.78.4
+      - name: Download Terragrunt if not cached
+        if: steps.cache-terragrunt.outputs.cache-hit != 'true'
+        run: |
+          wget -O terragrunt https://github.com/gruntwork-io/terragrunt/releases/download/v0.78.4/terragrunt_linux_amd64
+          chmod +x terragrunt
+      - name: Move Terragrunt to /usr/local/bin
+        run: sudo mv terragrunt /usr/local/bin/
+      - name: Generate Terragrunt dependency graph
+        run: terragrunt graph-dependencies --terragrunt-working-dir terragrunt/live/prod > deps.dot
+      - name: Find all affected modules (changed + dependents)
+        id: affected
+        run: |
+          CHANGED_DIRS=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep 'terragrunt/live/prod/' | awk -F'/' '{print $1"/"$2"/"$3"/"$4}' | sort -u | xargs)
+          terragrunt graph-dependencies --terragrunt-working-dir terragrunt/live/prod > deps.dot
+          get_dependents() {
+            local module="$1"
+            grep "\"$module\"" deps.dot | awk -F'->' '{gsub(/[\"]/, "", $2); print $2}' | tr -d ' '
+          }
+          ALL_AFFECTED=()
+          for dir in $CHANGED_DIRS; do
+            mod=$(basename $dir)
+            ALL_AFFECTED+=($dir)
+            for dep in $(get_dependents $mod); do
+              dep_path=$(find terragrunt/live/prod -type d -name "$dep")
+              [ -n "$dep_path" ] && ALL_AFFECTED+=($dep_path)
+            done
+          done
+          UNIQUE_AFFECTED=$(echo "${ALL_AFFECTED[@]}" | tr ' ' '\n' | sort -u | xargs)
+          echo "AFFECTED_DIRS=$UNIQUE_AFFECTED" >> $GITHUB_ENV
+      - name: Terragrunt plan for affected modules
+        run: |
+          for dir in $AFFECTED_DIRS; do
+            echo "Planning in $dir..."
+            cd $dir
+            terragrunt plan --terragrunt-non-interactive || exit 1
+            cd -
+          done
+
+  apply:
+    name: Terragrunt Apply (Affected Modules)
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: plan
+    runs-on: ubuntu-latest
+    env:
+      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+    steps:
+      - name: Checkout only terragrunt
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: terragrunt
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.12.0
+      - name: Cache Terragrunt
+        id: cache-terragrunt
+        uses: actions/cache@v4
+        with:
+          path: terragrunt
+          key: terragrunt-${{ runner.os }}-0.78.4
+      - name: Download Terragrunt if not cached
+        if: steps.cache-terragrunt.outputs.cache-hit != 'true'
+        run: |
+          wget -O terragrunt https://github.com/gruntwork-io/terragrunt/releases/download/v0.78.4/terragrunt_linux_amd64
+          chmod +x terragrunt
+      - name: Move Terragrunt to /usr/local/bin
+        run: sudo mv terragrunt /usr/local/bin/
+      - name: Generate Terragrunt dependency graph
+        run: terragrunt graph-dependencies --terragrunt-working-dir terragrunt/live/prod > deps.dot
+      - name: Find all affected modules (changed + dependents)
+        id: affected
+        run: |
+          CHANGED_DIRS=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep 'terragrunt/live/prod/' | awk -F'/' '{print $1"/"$2"/"$3"/"$4}' | sort -u | xargs)
+          terragrunt graph-dependencies --terragrunt-working-dir terragrunt/live/prod > deps.dot
+          get_dependents() {
+            local module="$1"
+            grep "\"$module\"" deps.dot | awk -F'->' '{gsub(/[\"]/, "", $2); print $2}' | tr -d ' '
+          }
+          ALL_AFFECTED=()
+          for dir in $CHANGED_DIRS; do
+            mod=$(basename $dir)
+            ALL_AFFECTED+=($dir)
+            for dep in $(get_dependents $mod); do
+              dep_path=$(find terragrunt/live/prod -type d -name "$dep")
+              [ -n "$dep_path" ] && ALL_AFFECTED+=($dep_path)
+            done
+          done
+          UNIQUE_AFFECTED=$(echo "${ALL_AFFECTED[@]}" | tr ' ' '\n' | sort -u | xargs)
+          echo "AFFECTED_DIRS=$UNIQUE_AFFECTED" >> $GITHUB_ENV
+      - name: Terragrunt apply for affected modules
+        run: |
+          for dir in $AFFECTED_DIRS; do
+            echo "Applying in $dir..."
+            cd $dir
+            terragrunt apply --terragrunt-non-interactive -auto-approve || exit 1
+            cd -
+          done
