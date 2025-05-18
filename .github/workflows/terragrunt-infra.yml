@@ -8,10 +8,12 @@ on:
   pull_request:
     paths:
       - 'terragrunt/**'
+      - '.github/workflows/terragrunt-infra.yml'
   push:
     branches: [main]
     paths:
       - 'terragrunt/**'
+      - '.github/workflows/terragrunt-infra.yml'
 
 jobs:
   lint-validate:
