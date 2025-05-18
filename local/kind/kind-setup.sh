@@ -34,7 +34,7 @@ NAMESPACE="sample-app"
 kubectl get namespace "$NAMESPACE" >/dev/null 2>&1 || kubectl create namespace "$NAMESPACE"
 
 # 6. Deploy PostgreSQL with Helm using custom values
-helm upgrade --install postgres-db ../../helm/postgres-standalone \
+helm upgrade --install postgres-db ../../helm/bitnami-postgres \
   --namespace "$NAMESPACE" \
   -f ./postgres-values.yaml
 
