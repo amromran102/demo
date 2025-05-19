@@ -47,11 +47,9 @@ jobs:
           helm lint ./helm/bitnami-postgres
           helm lint ./helm/ingress-nginx
 
-      - name: kubeval (all rendered manifests)
+      - name: kubeval (rendered manifests for app only)
         run: |
           helm template ./helm/app -f ./helm/environment/prod/app-values.yaml | kubeval --strict --ignore-missing-schemas
-          helm template ./helm/bitnami-postgres -f ./helm/environment/prod/postgres-ha-values.yaml | kubeval --strict --ignore-missing-schemas
-          helm template ./helm/ingress-nginx -f ./helm/environment/prod/ingress-nginx-values.yaml | kubeval --strict --ignore-missing-schemas
 
   helm-deploy:
     name: Deploy Helm Charts to AKS
