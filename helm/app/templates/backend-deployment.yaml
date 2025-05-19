@@ -5,7 +5,7 @@ metadata:
   labels:
     app: backend
 spec:
-  replicas: 1
+  replicas: {{ .Values.backend.replicaCount | default 1 }}
   selector:
     matchLabels:
       app: backend

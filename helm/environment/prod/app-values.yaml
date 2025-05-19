@@ -1,10 +1,12 @@
 frontend:
   image: ""
+  replicaCount: 3
   env:
     BACKEND_URL: http://backend:3000
 
 backend:
   image: ""
+  replicaCount: 3
   env:
     PORT: "3000"
 

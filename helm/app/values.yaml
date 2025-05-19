@@ -1,10 +1,12 @@
 frontend:
   image: "" # Replace with your frontend image name
+  replicaCount: 1
   env:
     BACKEND_URL: http://backend:3000
 
 backend:
   image: "" # Replace with your backend image name
+  replicaCount: 1
   env:
     PORT: "3000"
 
