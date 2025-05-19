@@ -7,6 +7,10 @@ on:
     paths:
       - 'helm/**'
       - '.github/workflows/helm-deploy.yml'
+  workflow_run:
+    workflows: ["Build and Push Container Images"]
+    types:
+      - completed
 
 jobs:
   helm-deploy:
@@ -38,10 +42,16 @@ jobs:
           cluster-name: prod-aks
 
       - name: Deploy ingress-nginx
+        if: >-
+          contains(github.event.head_commit.modified, 'helm/ingress-nginx/') ||
+          contains(github.event.head_commit.modified, 'helm/environment/prod/ingress-nginx-values.yaml')
         run: |
           helm upgrade --install ingress-nginx ./helm/ingress-nginx -n prod --create-namespace -f ./helm/environment/prod/ingress-nginx-values.yaml
 
       - name: Wait for ingress-nginx controller and admission webhook
+        if: >-
+          contains(github.event.head_commit.modified, 'helm/ingress-nginx/') ||
+          contains(github.event.head_commit.modified, 'helm/environment/prod/ingress-nginx-values.yaml')
         run: |
           kubectl rollout status deployment/ingress-nginx-controller -n prod --timeout=120s
           kubectl wait --for=condition=available --timeout=120s deployment/ingress-nginx-controller -n prod
@@ -52,15 +62,36 @@ jobs:
           done
 
       - name: Deploy PostgreSQL
+        if: >-
+          contains(github.event.head_commit.modified, 'helm/bitnami-postgres/') ||
+          contains(github.event.head_commit.modified, 'helm/environment/prod/postgres-ha-values.yaml')
         run: |
           helm upgrade --install postgresha ./helm/bitnami-postgres -n prod -f ./helm/environment/prod/postgres-ha-values.yaml \
             --set auth.password=${{ secrets.PG_USER_PASSWORD }} \
             --set auth.replicationPassword=${{ secrets.PG_REPL_PASSWORD }}
 
+      - name: Download image tag artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: image-tag
+
+      - name: Set image tag
+        id: set_image_tag
+        run: |
+          if [ -f image-tag.txt ]; then
+            echo "IMAGE_TAG=$(cat image-tag.txt)" >> $GITHUB_ENV
+          else
+            echo "IMAGE_TAG=latest" >> $GITHUB_ENV
+          fi
+
       - name: Deploy App
         run: |
           helm upgrade --install sampleapp ./helm/app -n prod -f ./helm/environment/prod/app-values.yaml \
+            --set frontend.image=ghcr.io/amromran102/demo/app-frontend:$IMAGE_TAG \
+            --set backend.image=ghcr.io/amromran102/demo/app-backend:$IMAGE_TAG \
             --set secrets.DBconnectionString="postgresql://myuser:${{ secrets.PG_USER_PASSWORD }}@postgresha-postgresql-primary.prod.svc.cluster.local:5432/ideasdb"
+        env:
+          IMAGE_TAG: ${{ env.IMAGE_TAG }}
 
       - name: Show all resources
         run: |

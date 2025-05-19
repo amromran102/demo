@@ -1,10 +1,10 @@
 frontend:
-  image: ghcr.io/amromran102/demo/app-frontend:latest
+  image: ""
   env:
     BACKEND_URL: http://backend:3000
 
 backend:
-  image: ghcr.io/amromran102/demo/app-backend:latest
+  image: ""
   env:
     PORT: "3000"
 
