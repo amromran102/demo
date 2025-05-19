@@ -176,6 +176,14 @@ jobs:
           done
           UNIQUE_AFFECTED=$(echo "${ALL_AFFECTED[@]}" | tr ' ' '\n' | sort -u | xargs)
           echo "AFFECTED_DIRS=$UNIQUE_AFFECTED" >> $GITHUB_ENV
+      - name: Terragrunt plan for affected modules
+        run: |
+          for dir in $AFFECTED_DIRS; do
+            echo "Planning in $dir..."
+            cd $dir
+            terragrunt plan --non-interactive || exit 1
+            cd -
+          done
       - name: Terragrunt apply for affected modules
         run: |
           for dir in $AFFECTED_DIRS; do
