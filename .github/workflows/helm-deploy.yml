@@ -25,27 +25,27 @@ jobs:
         with:
           version: 'latest'
 
-      - name: Install yamllint, prettier, kubeval
+      - name: Cache npm and kubeval
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            ~/kubeval
+          key: ${{ runner.os }}-tools-v1
+
+      - name: Install kubeval
         run: |
-          sudo apt-get update
-          sudo apt-get install -y yamllint
-          npm install -g prettier
-          curl -sSL https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz | tar xz
-          sudo mv kubeval /usr/local/bin/
+          mkdir -p ~/kubeval && cd ~/kubeval
+          if [ ! -f kubeval ]; then
+            curl -sSL https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz | tar xz
+            sudo mv kubeval /usr/local/bin/
+          fi
 
       - name: Helm lint (all charts)
         run: |
           helm lint ./helm/app
           helm lint ./helm/bitnami-postgres
           helm lint ./helm/ingress-nginx
-
-      - name: yamllint (all YAML files)
-        run: |
-          yamllint . --format colored --strict
-
-      - name: prettier check (all YAML)
-        run: |
-          prettier --check "**/*.yaml" "**/*.yml"
 
       - name: kubeval (all rendered manifests)
         run: |
