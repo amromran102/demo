@@ -28,7 +28,7 @@ function App() {
 
   return (
     <div style={{ padding: '20px' }}>
-      <h1>Sample App</h1>
+      <h1>Sample App v1</h1>
       <h2>Messages</h2>
       <form onSubmit={handleSubmit}>
         <input
