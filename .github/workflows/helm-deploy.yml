@@ -1,16 +1,22 @@
 name: Helm Deploy Pipeline
 
 on:
+  workflow_call:
+    inputs:
+      image_tag:
+        required: false
+        type: string
   workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Image tag to deploy (leave blank for latest)'
+        required: false
+        default: ''
   push:
     branches: [main]
     paths:
       - 'helm/**'
       - '.github/workflows/helm-deploy.yml'
-  workflow_run:
-    workflows: ["Build and Push Container Images"]
-    types:
-      - completed
 
 jobs:
   validate-config:
@@ -109,20 +115,12 @@ jobs:
             --set auth.password=${{ secrets.PG_USER_PASSWORD }} \
             --set auth.replicationPassword=${{ secrets.PG_REPL_PASSWORD }}
 
-      - name: Download image tag artifact
-        id: download_image_tag
-        continue-on-error: true
-        uses: actions/download-artifact@v4
-        with:
-          name: image-tag
-
-      - name: Set image tag
-        id: set_image_tag
+      - name: Set IMAGE_TAG variable
         run: |
-          if [ -f image-tag.txt ]; then
-            echo "IMAGE_TAG=$(cat image-tag.txt)" >> $GITHUB_ENV
-          else
+          if [ -z "${{ inputs.image_tag }}" ] || [ "${{ inputs.image_tag }}" == "null" ]; then
             echo "IMAGE_TAG=latest" >> $GITHUB_ENV
+          else
+            echo "IMAGE_TAG=${{ inputs.image_tag }}" >> $GITHUB_ENV
           fi
 
       - name: Deploy App
