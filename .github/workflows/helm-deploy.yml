@@ -13,9 +13,50 @@ on:
       - completed
 
 jobs:
+  validate-config:
+    name: Validate Helm Charts and Manifests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: 'latest'
+
+      - name: Install yamllint, prettier, kubeval
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y yamllint
+          npm install -g prettier
+          curl -sSL https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz | tar xz
+          sudo mv kubeval /usr/local/bin/
+
+      - name: Helm lint (all charts)
+        run: |
+          helm lint ./helm/app
+          helm lint ./helm/bitnami-postgres
+          helm lint ./helm/ingress-nginx
+
+      - name: yamllint (all YAML files)
+        run: |
+          yamllint . --format colored --strict
+
+      - name: prettier check (all YAML)
+        run: |
+          prettier --check "**/*.yaml" "**/*.yml"
+
+      - name: kubeval (all rendered manifests)
+        run: |
+          helm template ./helm/app -f ./helm/environment/prod/app-values.yaml | kubeval --strict --ignore-missing-schemas
+          helm template ./helm/bitnami-postgres -f ./helm/environment/prod/postgres-ha-values.yaml | kubeval --strict --ignore-missing-schemas
+          helm template ./helm/ingress-nginx -f ./helm/environment/prod/ingress-nginx-values.yaml | kubeval --strict --ignore-missing-schemas
+
   helm-deploy:
     name: Deploy Helm Charts to AKS
     runs-on: ubuntu-latest
+    needs: validate-config
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
