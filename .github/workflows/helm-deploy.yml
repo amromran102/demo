@@ -34,7 +34,7 @@ jobs:
       - name: Set AKS context
         uses: azure/aks-set-context@v3
         with:
-          resource-group: my-prod-aks
+          resource-group: my-prod-rg
           cluster-name: prod-aks
 
       - name: Deploy ingress-nginx
