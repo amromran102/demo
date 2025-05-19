@@ -71,6 +71,8 @@ jobs:
             --set auth.replicationPassword=${{ secrets.PG_REPL_PASSWORD }}
 
       - name: Download image tag artifact
+        id: download_image_tag
+        continue-on-error: true
         uses: actions/download-artifact@v4
         with:
           name: image-tag
