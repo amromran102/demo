@@ -41,6 +41,16 @@ jobs:
         run: |
           helm upgrade --install ingress-nginx ./helm/ingress-nginx -n prod --create-namespace -f ./helm/environment/prod/ingress-nginx-values.yaml
 
+      - name: Wait for ingress-nginx controller and admission webhook
+        run: |
+          kubectl rollout status deployment/ingress-nginx-controller -n prod --timeout=120s
+          kubectl wait --for=condition=available --timeout=120s deployment/ingress-nginx-controller -n prod
+          for i in {1..12}; do
+            kubectl get endpoints ingress-nginx-controller-admission -n prod | grep -q 'ENDPOINTS' && break
+            echo 'Waiting for ingress-nginx-controller-admission endpoints...'
+            sleep 10
+          done
+
       - name: Deploy PostgreSQL
         run: |
           helm upgrade --install postgresha ./helm/bitnami-postgres -n prod -f ./helm/environment/prod/postgres-ha-values.yaml \
