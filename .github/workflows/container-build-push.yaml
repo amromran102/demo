@@ -54,8 +54,3 @@ jobs:
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:${{ github.sha }}
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:latest
-
-      - name: Call Helm Deploy Pipeline
-        uses: ./.github/workflows/helm-deploy.yml
-        with:
-          image_tag: ${{ github.sha }}

@@ -1,17 +1,11 @@
 name: Helm Deploy Pipeline
 
 on:
-  workflow_call:
-    inputs:
-      image_tag:
-        required: false
-        type: string
+  workflow_run:
+    workflows: ["Build and Push Container Images"]
+    types:
+      - completed
   workflow_dispatch:
-    inputs:
-      image_tag:
-        description: 'Image tag to deploy (leave blank for latest)'
-        required: false
-        default: ''
   push:
     branches: [main]
     paths:
@@ -115,22 +109,12 @@ jobs:
             --set auth.password=${{ secrets.PG_USER_PASSWORD }} \
             --set auth.replicationPassword=${{ secrets.PG_REPL_PASSWORD }}
 
-      - name: Set IMAGE_TAG variable
-        run: |
-          if [ -z "${{ inputs.image_tag }}" ] || [ "${{ inputs.image_tag }}" == "null" ]; then
-            echo "IMAGE_TAG=latest" >> $GITHUB_ENV
-          else
-            echo "IMAGE_TAG=${{ inputs.image_tag }}" >> $GITHUB_ENV
-          fi
-
       - name: Deploy App
         run: |
           helm upgrade --install sampleapp ./helm/app -n prod -f ./helm/environment/prod/app-values.yaml \
-            --set frontend.image=ghcr.io/amromran102/demo/app-frontend:$IMAGE_TAG \
-            --set backend.image=ghcr.io/amromran102/demo/app-backend:$IMAGE_TAG \
+            --set frontend.image=ghcr.io/amromran102/demo/app-frontend:latest \
+            --set backend.image=ghcr.io/amromran102/demo/app-backend:latest \
             --set secrets.DBconnectionString="postgresql://myuser:${{ secrets.PG_USER_PASSWORD }}@postgresha-postgresql-primary.prod.svc.cluster.local:5432/ideasdb"
-        env:
-          IMAGE_TAG: ${{ env.IMAGE_TAG }}
 
       - name: Show all resources
         run: |
