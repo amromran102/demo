@@ -1,5 +1,0 @@
-# This file is used to ignore files and directories in the local environment
-kind/*.yaml
-
-# Docker Compose files
-compose/.env

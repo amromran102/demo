@@ -43,13 +43,13 @@ jobs:
 
       - name: Helm lint (all charts)
         run: |
-          helm lint ./helm/app
-          helm lint ./helm/bitnami-postgres
-          helm lint ./helm/ingress-nginx
+          helm lint ./helm/charts/app
+          helm lint ./helm/charts/bitnami-postgres
+          helm lint ./helm/charts/ingress-nginx
 
       - name: kubeval (rendered manifests for app only)
         run: |
-          helm template ./helm/app -f ./helm/environment/prod/app-values.yaml | kubeval --strict --ignore-missing-schemas
+          helm template ./helm/charts/app -f ./helm/environment/prod/app-values.yaml | kubeval --strict --ignore-missing-schemas
 
   helm-deploy:
     name: Deploy Helm Charts to AKS
@@ -82,14 +82,14 @@ jobs:
 
       - name: Deploy ingress-nginx
         if: >-
-          contains(github.event.head_commit.modified, 'helm/ingress-nginx/') ||
+          contains(github.event.head_commit.modified, 'helm/charts/ingress-nginx/') ||
           contains(github.event.head_commit.modified, 'helm/environment/prod/ingress-nginx-values.yaml')
         run: |
-          helm upgrade --install ingress-nginx ./helm/ingress-nginx -n prod --create-namespace -f ./helm/environment/prod/ingress-nginx-values.yaml
+          helm upgrade --install ingress-nginx ./helm/charts/ingress-nginx -n prod --create-namespace -f ./helm/environment/prod/ingress-nginx-values.yaml
 
       - name: Wait for ingress-nginx controller and admission webhook
         if: >-
-          contains(github.event.head_commit.modified, 'helm/ingress-nginx/') ||
+          contains(github.event.head_commit.modified, 'helm/charts/ingress-nginx/') ||
           contains(github.event.head_commit.modified, 'helm/environment/prod/ingress-nginx-values.yaml')
         run: |
           kubectl rollout status deployment/ingress-nginx-controller -n prod --timeout=120s
@@ -102,23 +102,23 @@ jobs:
 
       - name: Deploy PostgreSQL
         if: >-
-          contains(github.event.head_commit.modified, 'helm/bitnami-postgres/') ||
+          contains(github.event.head_commit.modified, 'helm/charts/bitnami-postgres/') ||
           contains(github.event.head_commit.modified, 'helm/environment/prod/postgres-ha-values.yaml')
         run: |
-          helm upgrade --install postgresha ./helm/bitnami-postgres -n prod -f ./helm/environment/prod/postgres-ha-values.yaml \
+          helm upgrade --install postgresha ./helm/charts/bitnami-postgres -n prod -f ./helm/environment/prod/postgres-ha-values.yaml \
             --set auth.password=${{ secrets.PG_USER_PASSWORD }} \
             --set auth.replicationPassword=${{ secrets.PG_REPL_PASSWORD }}
 
       - name: Deploy Prometheus Monitoring
         if: >-
-          contains(github.event.head_commit.modified, 'helm/prometheus/') ||
+          contains(github.event.head_commit.modified, 'helm/charts/prometheus/') ||
           contains(github.event.head_commit.modified, 'helm/environment/prod/prometheus-values.yaml')
         run: |
-          helm upgrade --install monitoring ./helm/promethus -n prod -f ./helm/environment/prod/prometheus-values.yaml            
+          helm upgrade --install monitoring ./helm/charts/promethus -n prod -f ./helm/environment/prod/prometheus-values.yaml            
 
       - name: Deploy App
         run: |
-          helm upgrade --install sampleapp ./helm/app -n prod -f ./helm/environment/prod/app-values.yaml \
+          helm upgrade --install sampleapp ./helm/charts/app -n prod -f ./helm/environment/prod/app-values.yaml \
             --set frontend.image=ghcr.io/amromran102/demo/app-frontend:latest \
             --set backend.image=ghcr.io/amromran102/demo/app-backend:latest \
             --set secrets.DBconnectionString="postgresql://myuser:${{ secrets.PG_USER_PASSWORD }}@postgresha-postgresql-primary.prod.svc.cluster.local:5432/ideasdb"
