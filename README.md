@@ -6,13 +6,13 @@
 
 ## Solution Showcase (Screenshots)
 
+**Sample App in Browser (persistent messages):**
+
+![Sample App](./icons/demo-sample-app-v1.png)
+
 **Kubernetes Pods (k9s view):**
 
 ![K9s Pods](./icons/demo-k9s-pods.png)
-
-**Sample App in Browser (with persistent messages):**
-
-![Sample App](./icons/demo-sample-app-v1.png)
 
 **Terragrunt CI/CD Pipeline (GitHub Actions):**
 
@@ -144,9 +144,8 @@
   - No hardcoded secrets; all sensitive data is injected securely via GitHub Actions secrets.
   - Validation steps (Helm lint, kubeval) catch errors before deployment.
   - Conditional chart deployment for efficiency (only deploy changed components).
-  - `imagePullPolicy: Always` ensures the latest images are always used, even with the `latest` tag.
 
-...
+>
   Example pipeline (container-build-push.yaml):
   ```yaml
   jobs:
