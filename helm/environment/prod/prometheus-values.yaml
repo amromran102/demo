@@ -1,0 +1,30 @@
+# Custom values for Prometheus stack with Grafana enabled and persistent storage
+
+grafana:
+  enabled: true
+  persistence:
+    enabled: true
+    size: 5Gi
+    storageClassName: default
+  adminPassword: "admin"
+  service:
+    type: ClusterIP
+  ingress:
+    enabled: false
+
+prometheus:
+  prometheusSpec:
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: default
+          accessModes: [ "ReadWriteOnce" ]
+          resources:
+            requests:
+              storage: 10Gi
+  service:
+    type: ClusterIP
+
+# Optionally, enable ServiceMonitor for app metrics (if using Prometheus Operator)
+# serviceMonitors:
+#   enabled: true

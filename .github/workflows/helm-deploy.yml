@@ -109,6 +109,13 @@ jobs:
             --set auth.password=${{ secrets.PG_USER_PASSWORD }} \
             --set auth.replicationPassword=${{ secrets.PG_REPL_PASSWORD }}
 
+      - name: Deploy Prometheus Monitoring
+        if: >-
+          contains(github.event.head_commit.modified, 'helm/prometheus/') ||
+          contains(github.event.head_commit.modified, 'helm/environment/prod/prometheus-values.yaml')
+        run: |
+          helm upgrade --install monitoring ./helm/promethus -n prod -f ./helm/environment/prod/prometheus-values.yaml            
+
       - name: Deploy App
         run: |
           helm upgrade --install sampleapp ./helm/app -n prod -f ./helm/environment/prod/app-values.yaml \
