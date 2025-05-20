@@ -47,30 +47,48 @@
 
   Example docker-compose.yml:
   ```yaml
-  version: '3.8'
   services:
-    backend:
-      build: ../app/backend
-      environment:
-        - POSTGRES_CONNECTION_STRING=postgres://myuser:password@db:5432/ideasdb
-      ports:
-        - "3000:3000"
     frontend:
-      build: ../app/frontend
-      environment:
-        - BACKEND_URL=http://localhost:3000
+      build:
+        context: ../../app/frontend
+        dockerfile: Dockerfile
       ports:
-        - "8080:80"
-    db:
-      image: postgres:15
+        - "8080:8080"
       environment:
-        - POSTGRES_DB=ideasdb
-        - POSTGRES_USER=myuser
-        - POSTGRES_PASSWORD=password
+        - BACKEND_URL=http://backend:3000
+      depends_on:
+        backend:
+          condition: service_healthy
+    backend:
+      build:
+        context: ../../app/backend
+        dockerfile: Dockerfile
+      environment:
+        - PORT=3000
+        - POSTGRES_CONNECTION_STRING=${POSTGRES_CONNECTION_STRING}
+      depends_on:
+        postgres:
+          condition: service_healthy
+      healthcheck:
+        test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', res => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
+        interval: 10s
+        timeout: 5s
+        retries: 5
+    postgres:
+      image: postgres:15-alpine
+      environment:
+        - POSTGRES_USER=${POSTGRES_USER}
+        - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+        - POSTGRES_DB=${POSTGRES_DB}
       volumes:
-        - db-data:/var/lib/postgresql/data
+        - postgres-data:/var/lib/postgresql/data
+      healthcheck:
+        test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+        interval: 5s
+        timeout: 5s
+        retries: 5
   volumes:
-    db-data:
+    postgres-data:
   ```
 
 ## 2. Kubernetes & Helm
