@@ -12,7 +12,7 @@
 
 **Sample App in Browser (with persistent messages):**
 
-![Sample App](./icons/demo-sample-app.png)
+![Sample App](./icons/demo-sample-app-v1.png)
 
 **Terragrunt CI/CD Pipeline (GitHub Actions):**
 
